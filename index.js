@@ -1,18 +1,28 @@
 "use strict"
 const axios = require("axios").default
 
+const chat_id = "@konachan_wifi"
 const tg_token = process.env.QKNTG_TOKEN
 const target_gid = Number(process.env.KNT_GID)
 
 /**
  * @param {string} text 
  */
-function forwardToTelegram(text) {
+function forwardTextToTelegram(text) {
     if (!tg_token) return
     if (text.length > 4096)
         text = text.slice(0, 4094) + ".."
-    const data = "chat_id=@konachan_wifi&text=" + encodeURIComponent(text)
-    axios.post(`https://api.telegram.org/bot${tg_token}/sendmessage`, data, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+    const data = `chat_id=${chat_id}&text=` + encodeURIComponent(text)
+    axios.post(`https://api.telegram.org/bot${tg_token}/sendMessage`, data, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
+}
+
+function forwardImagesToTelegram(imgs) {
+    if (!imgs.length) return
+    const data = {
+        chat_id,
+        media: imgs
+    }
+    axios.post(`https://api.telegram.org/bot${tg_token}/sendMediaGroup`, JSON.stringify(data), { headers: { "Content-Type": "application/json" } })
 }
 
 /**
@@ -21,7 +31,16 @@ function forwardToTelegram(text) {
  */
 function listener(data) {
     if (data.group_id !== target_gid || data.sender.user_id === this.uin) return
-    forwardToTelegram(data.member.card + ": " + data.raw_message)
+    forwardTextToTelegram(data.member.card + ": " + data.raw_message)
+    const imgs = []
+    for (const elem of data.message) {
+        if (elem.type === "image")
+            imgs.push({
+                type: "photo",
+                media: elem.url
+            })
+    }
+    forwardImagesToTelegram(imgs)
 }
 
 /**
