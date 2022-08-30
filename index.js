@@ -2,7 +2,7 @@
 const axios = require("axios").default
 
 const tg_token = process.env.QKNTG_TOKEN
-const target_gid = process.env.KNT_GID
+const target_gid = Number(process.env.KNT_GID)
 
 /**
  * @param {string} text 
@@ -15,14 +15,13 @@ function forwardToTelegram(text) {
     axios.post(`https://api.telegram.org/bot${tg_token}/sendmessage`, data, { headers: { "Content-Type": "application/x-www-form-urlencoded" } })
 }
 
-
 /**
  * @param {import("oicq").GroupMessageEvent} data
  * @this {import("oicq").Client}
  */
 function listener(data) {
     if (data.group_id !== target_gid || data.sender.user_id === this.uin) return
-    forwardToTelegram(data.toString())
+    forwardToTelegram(data.member.card + ": " + data.raw_message)
 }
 
 /**
