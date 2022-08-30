@@ -12,7 +12,7 @@ const chat_id = "konachan_wifi"
 const tg_token = process.env.QKNTG_TOKEN
 const target_gid = Number(process.env.KNT_GID)
 
-const timer = setInterval(pollTelegramMessage, 2000)
+const timer = setInterval(pollTelegramMessage, 3000)
 let update_id = 0
 const idfile = path.join(__dirname, "telegram_update_id") 
 fs.readFile(idfile, (err, data) => {
@@ -20,9 +20,9 @@ fs.readFile(idfile, (err, data) => {
 })
 
 function pollTelegramMessage() {
-    const url = `https://api.telegram.org/bot${tg_token}/getUpdates?offset=${update_id}`
+    const url = `https://api.telegram.org/bot${tg_token}/getUpdates?offset=${update_id + 1}`
     axios.get(url).then(rsp => {
-        const data = JSON.parse(String(rsp.data)).result
+        const data = rsp.data.result
         let id = update_id
         for (const node of data) {
             id = node.update_id
@@ -34,7 +34,7 @@ function pollTelegramMessage() {
                 qq?.sendGroupMsg(target_gid, msg.from.first_name + ": " + msg.text)
         }
         update_id = id
-        fs.writeFile(idfile, String(id), () => {})
+        fs.writeFile(idfile, String(update_id), () => {})
     })
 }
 
